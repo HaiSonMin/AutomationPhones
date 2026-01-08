@@ -1,0 +1,29 @@
+{
+  "server_url": "http://localhost:9000/api/v1",
+  "ui": {
+    "width": 1400,
+    "height": 900,
+    "url": "http://localhost:3000",
+    "debug": true
+  },
+  "security": {
+    "token_service": "AutomationToolPhones",
+    "encryption_enabled": true,
+    "session_timeout": 3600
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "logs/bridge.log",
+    "max_size": "10MB",
+    "backup_count": 5
+  },
+  "enabled_bridges": {
+    "auth": true
+  },
+  "features": {
+    "auto_sync": false,
+    "bulk_operations": false,
+    "scheduling": false,
+    "analytics": false
+  }
+}

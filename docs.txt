@@ -1,0 +1,11 @@
+# Check version of python
+pyenv versions
+
+# Kiểm tra toàn bộ list python đã cày
+pyenv install --list
+
+# Áp dụng version 3.12 vào dự án
+pyenv local 3.12.0
+
+# Vào môi trường ảo
+.\venv\Scripts\Activate.ps1
