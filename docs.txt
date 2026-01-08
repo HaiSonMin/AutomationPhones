@@ -7,5 +7,9 @@ pyenv install --list
 # Áp dụng version 3.12 vào dự án
 pyenv local 3.12.0
 
+# Cài đặt môi trường ảo
+python -m venv venv
+
 # Vào môi trường ảo
 .\venv\Scripts\Activate.ps1
+
