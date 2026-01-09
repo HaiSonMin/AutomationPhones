@@ -10,6 +10,13 @@ node_modules
 pull.bat
 push.bat
 
+# Python build artifacts
+build/
+*.spec
+__pycache__/
+*.pyc
+*.pyo
+
 # Logs
 *.log
 npm-debug.log*

@@ -1,0 +1,126 @@
+/**
+ * MonitoringPage.css - Styles for the main monitoring page
+ *
+ * Dark theme consistent with the app design.
+ */
+
+/* =============================================================================
+   PAGE CONTAINER
+   ============================================================================= */
+
+.monitoring-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  color: #f1f5f9;
+}
+
+/* =============================================================================
+   HEADER
+   ============================================================================= */
+
+.monitoring-header {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid #334155;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.header-icon {
+  font-size: 28px;
+}
+
+.header-title h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.header-subtitle {
+  color: #94a3b8;
+  font-size: 14px;
+  padding-left: 42px;
+}
+
+/* =============================================================================
+   BANNERS
+   ============================================================================= */
+
+.error-banner,
+.warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  margin: 16px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.error-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.error-icon {
+  font-size: 18px;
+}
+
+.error-message {
+  flex: 1;
+}
+
+.error-retry {
+  padding: 6px 12px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  color: #fca5a5;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.error-retry:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.warning-banner {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+}
+
+.warning-icon {
+  font-size: 18px;
+}
+
+/* =============================================================================
+   RESPONSIVE
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .monitoring-header {
+    padding: 16px;
+  }
+
+  .header-title h1 {
+    font-size: 20px;
+  }
+
+  .header-subtitle {
+    padding-left: 36px;
+    font-size: 13px;
+  }
+}

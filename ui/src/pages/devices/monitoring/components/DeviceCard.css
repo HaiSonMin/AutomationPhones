@@ -1,0 +1,361 @@
+/**
+ * DeviceCard.css - Styles for the DeviceCard component
+ *
+ * Uses a dark theme consistent with the reference image.
+ * Mobile-responsive grid layout.
+ */
+
+/* =============================================================================
+   CARD CONTAINER
+   ============================================================================= */
+
+.device-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s ease;
+  min-width: 240px;
+  max-width: 300px;
+}
+
+.device-card:hover {
+  border-color: #475569;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+/* State-based borders */
+.device-card.streaming {
+  border-color: #22c55e;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+}
+
+.device-card.error {
+  border-color: #ef4444;
+}
+
+.device-card.unauthorized {
+  border-color: #f59e0b;
+}
+
+/* =============================================================================
+   HEADER
+   ============================================================================= */
+
+.device-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.device-index {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  min-width: 32px;
+  text-align: center;
+}
+
+.device-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.device-model {
+  font-weight: 600;
+  color: #f1f5f9;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-id {
+  color: #64748b;
+  font-size: 11px;
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-status {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-icon {
+  font-size: 14px;
+}
+
+/* =============================================================================
+   SCREEN PLACEHOLDER
+   ============================================================================= */
+
+.device-screen {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  text-align: center;
+}
+
+/* Streaming state */
+.screen-streaming {
+  color: #22c55e;
+}
+
+.streaming-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.streaming-text {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.streaming-hint {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* Ready state */
+.screen-ready {
+  color: #10b981;
+}
+
+.ready-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.ready-text {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.ready-hint {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* Unauthorized state */
+.screen-unauthorized {
+  color: #f59e0b;
+}
+
+.unauthorized-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.unauthorized-text {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.unauthorized-hint {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* Error state */
+.screen-error {
+  color: #ef4444;
+}
+
+.error-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.error-text {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.error-message {
+  font-size: 11px;
+  color: #94a3b8;
+  word-break: break-word;
+}
+
+/* Offline state */
+.screen-offline {
+  color: #6b7280;
+}
+
+.offline-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.offline-text {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.offline-hint {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* =============================================================================
+   CONTROLS
+   ============================================================================= */
+
+.device-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.control-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.control-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.control-value {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.control-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #334155;
+  outline: none;
+  cursor: pointer;
+}
+
+.control-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.control-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.control-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  cursor: pointer;
+  border: none;
+}
+
+.control-slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.control-slider:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+   BUTTON
+   ============================================================================= */
+
+.control-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.control-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-icon {
+  font-size: 16px;
+}
+
+.btn-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

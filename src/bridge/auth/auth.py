@@ -5,12 +5,23 @@ Token stored securely in Python keyring
 
 import keyring
 import json
-from typing import Dict, Any, Optional
+from typing import Dict, Any, TypedDict
 
 # Keyring service configuration
 SERVICE_NAME = "AutomationToolPhones"
 TOKEN_KEY = "auth_token"
 USER_KEY = "auth_user"
+
+
+class IUser(TypedDict):
+    userId: str
+    userEmail: str
+    userName: str
+    userAvatar: str | None
+    userIsRootAdmin: bool
+    userIsSubAdmin: bool
+    userIsLeader: bool
+    userListRolesModule: Any | None
 
 
 class AuthBridge:
@@ -26,7 +37,8 @@ class AuthBridge:
     # Login Handler - Called by React after successful login
     # ============================================
 
-    def on_login_success(self, token: str, user: dict) -> Dict[str, Any]:
+    def on_login_success(self, token: str, user: IUser) -> Dict[str, Any]:
+        print("user::::", user)
         """
         Called by React after successful login API response
         Saves token and user data to keyring
@@ -45,7 +57,7 @@ class AuthBridge:
             # Save user data as JSON
             keyring.set_password(SERVICE_NAME, USER_KEY, json.dumps(user))
 
-            user_name = user.get("user_fullName", "Unknown")
+            user_name = user.get("userName", "Unknown")
             print(f"✅ Login successful - Token saved for: {user_name}")
 
             return {"success": True, "message": f"Token saved for {user_name}"}
@@ -89,27 +101,34 @@ class AuthBridge:
     # Token Getters - For Python to use internally
     # ============================================
 
-    def get_token(self) -> Optional[str]:
+    def get_token(self) -> Dict[str, Any]:
         """Get stored token"""
         try:
-            return keyring.get_password(SERVICE_NAME, TOKEN_KEY)
-        except Exception:
-            return None
+            token = keyring.get_password(SERVICE_NAME, TOKEN_KEY)
+            if token:
+                return {"success": True, "token": token}
+            return {"success": False, "token": None}
+        except Exception as e:
+            return {"success": False, "token": None, "error": str(e)}
 
-    def get_current_user(self) -> Optional[dict]:
+    def get_current_user(self) -> Dict[str, Any]:
         """Get stored user data"""
         try:
             user_json = keyring.get_password(SERVICE_NAME, USER_KEY)
             if user_json:
-                return json.loads(user_json)
-            return None
-        except Exception:
-            return None
+                return {"success": True, "user": json.loads(user_json)}
+            return {"success": False, "user": None}
+        except Exception as e:
+            return {"success": False, "user": None, "error": str(e)}
 
-    def is_authenticated(self) -> bool:
+    def is_authenticated(self) -> Dict[str, Any]:
         """Check if user is authenticated"""
-        token = self.get_token()
-        return token is not None and token != ""
+        try:
+            token = keyring.get_password(SERVICE_NAME, TOKEN_KEY)
+            authenticated = token is not None and token != ""
+            return {"authenticated": authenticated}
+        except Exception:
+            return {"authenticated": False}
 
 
 # Singleton instance

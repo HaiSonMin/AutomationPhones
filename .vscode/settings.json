@@ -5,5 +5,6 @@
   "python.autoComplete.extraPaths": ["${workspaceFolder}/src"],
   "python.languageServer": "Pylance",
   "python.analysis.typeCheckingMode": "basic",
+  "editor.defaultFormatter": "ms-python.black-formatter",
   "python.analysis.autoImportCompletions": true
 }

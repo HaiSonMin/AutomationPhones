@@ -21,7 +21,47 @@ export interface LoginResponse {
 }
 
 // Check if running in PyWebView
-const isPyWebView = () => typeof window !== 'undefined' && window.pywebview?.auth;
+const isPyWebView = (): boolean => {
+  return typeof window !== 'undefined' && 'pywebview' in window && window.pywebview !== undefined;
+};
+
+// Helper function to safely access pywebview API
+const getPyWebViewAPI = () => {
+  if (!isPyWebView()) return null;
+  return window.pywebview?.api || null;
+};
+
+// Wait for pywebview API to be ready (listens for pywebviewready event)
+const waitForPyWebView = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const api = getPyWebViewAPI();
+
+    // Check if already ready
+    if (api && typeof api.auth_get_token === 'function') {
+      resolve(true);
+      return;
+    }
+
+    // Listen for pywebviewready event
+    const onReady = () => {
+      window.removeEventListener('pywebviewready', onReady);
+      resolve(true);
+    };
+
+    window.addEventListener('pywebviewready', onReady);
+
+    // Timeout after 5 seconds
+    setTimeout(() => {
+      window.removeEventListener('pywebviewready', onReady);
+      const apiAfterTimeout = getPyWebViewAPI();
+      if (apiAfterTimeout && typeof apiAfterTimeout.auth_get_token === 'function') {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    }, 5000);
+  });
+};
 
 /**
  * Auth Service - React handles API calls, Python stores token
@@ -36,9 +76,12 @@ class AuthService {
       const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
       const { token, user } = response.data.metadata;
 
+      console.log('user:::', user);
+
       // 2. Notify Python to save token (if running in PyWebView)
-      if (isPyWebView()) {
-        await window.pywebview.auth.on_login_success(token, user);
+      const api = getPyWebViewAPI();
+      if (api) {
+        await api.auth_on_login_success(token, user);
       } else {
         // Fallback to localStorage for browser testing
         localStorage.setItem('auth_token', token);
@@ -65,8 +108,9 @@ class AuthService {
       console.error('Logout API error:', error);
     } finally {
       // Notify Python to clear token
-      if (isPyWebView()) {
-        await window.pywebview.auth.on_logout();
+      const api = getPyWebViewAPI();
+      if (api) {
+        await api.auth_on_logout();
       } else {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_user');
@@ -83,11 +127,19 @@ class AuthService {
    */
   async checkAuth(): Promise<boolean> {
     try {
-      if (isPyWebView()) {
-        const result = await window.pywebview.auth.is_authenticated();
+      const api = getPyWebViewAPI();
+      if (api) {
+        // Wait for pywebview API to be ready
+        const isReady = await waitForPyWebView();
+        if (!isReady) {
+          console.warn('PyWebView API not ready');
+          return false;
+        }
+
+        const result = (await api.auth_is_authenticated()) as { authenticated: boolean };
         if (result.authenticated) {
-          const userResult = await window.pywebview.auth.get_current_user();
-          const tokenResult = await window.pywebview.auth.get_token();
+          const userResult = (await api.auth_get_current_user()) as { success: boolean; user: any };
+          const tokenResult = (await api.auth_get_token()) as { success: boolean; token: string };
           if (userResult.user && tokenResult.token) {
             useAuthStore.getState().setAuth(userResult.user, tokenResult.token);
             return true;
@@ -104,7 +156,8 @@ class AuthService {
         }
         return false;
       }
-    } catch {
+    } catch (error) {
+      console.error('checkAuth error:', error);
       return false;
     }
   }
@@ -113,8 +166,9 @@ class AuthService {
    * Get token (for Axios interceptor)
    */
   async getToken(): Promise<string | null> {
-    if (isPyWebView()) {
-      const result = await window.pywebview.auth.get_token();
+    const api = getPyWebViewAPI();
+    if (api) {
+      const result = (await api.auth_get_token()) as { success: boolean; token: string | null };
       return result.success ? result.token : null;
     }
     return localStorage.getItem('auth_token');
