@@ -1,26 +1,10 @@
 /**
- * Monitoring feature exports
+ * Monitoring Module
  */
 
-// Main page
 export { MonitoringPage } from './MonitoringPage';
-export { default } from './MonitoringPage';
-
-// Content
-export { default as MonitoringContent } from './MonitoringContent';
-
-// Components
-export { DeviceCard, DeviceGrid } from './components';
-
-// Hooks
-export { useMonitoringBridge } from './hooks/useMonitoringBridge';
-export { useDeviceEvents } from './hooks/useDeviceEvents';
-
-// Types
-export type {
-  Device,
-  DeviceState,
-  ApiResult,
-  ConnectResult,
-  MonitoringStats,
-} from './types/monitoring.types';
+export { MonitoringContent } from './MonitoringContent';
+export * from './types/monitoring.types';
+export * from './hooks/useMonitoringBridge';
+export * from './hooks/useDeviceEvents';
+export * from './components';

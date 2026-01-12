@@ -1,119 +1,62 @@
 /**
- * useDeviceEvents - Hook for listening to device change events from Python
- *
- * Python pushes 'monitoring-devices-changed' events when devices connect,
- * disconnect, or change state. This hook handles subscribing to those events.
- *
- * Usage:
- *   useDeviceEvents((devices) => {
- *     setDevices(devices);
- *   });
+ * useDeviceEvents - Hook for listening to device and frame events
  */
 
-import { useEffect, useCallback, useRef } from 'react';
-import type { Device, DevicesChangedEvent } from '../types/monitoring.types';
+import { useEffect, useCallback } from 'react';
+import type { Device } from '../types/monitoring.types';
 
-// =============================================================================
-// TYPES
-// =============================================================================
-
-/**
- * Callback when devices change
- */
 export type DevicesChangedCallback = (devices: Device[]) => void;
+export type FrameCallback = (deviceId: string, frame: string) => void;
 
-/**
- * Options for the hook
- */
-export interface UseDeviceEventsOptions {
-  /** Whether to enable event listening (default: true) */
-  enabled?: boolean;
-
-  /** Debounce delay in ms (default: 100) */
-  debounceMs?: number;
+interface DevicesChangedEventDetail {
+  devices: Device[];
 }
 
-// =============================================================================
-// HOOK
-// =============================================================================
+interface FrameEventDetail {
+  deviceId: string;
+  frame: string;
+}
 
-/**
- * Hook to listen for device change events from Python
- *
- * Subscribes to 'monitoring-devices-changed' CustomEvent that Python
- * dispatches via window.evaluate_js().
- *
- * @param onDevicesChanged - Callback when devices change
- * @param options - Hook options
- *
- * @example
- * ```tsx
- * function DeviceList() {
- *   const [devices, setDevices] = useState<Device[]>([]);
- *
- *   // Auto-update when Python sends events
- *   useDeviceEvents(setDevices);
- *
- *   return <div>{devices.map(...)}</div>;
- * }
- * ```
- */
 export function useDeviceEvents(
   onDevicesChanged: DevicesChangedCallback,
-  options: UseDeviceEventsOptions = {}
+  onFrame?: FrameCallback,
+  enabled: boolean = true
 ): void {
-  const { enabled = true, debounceMs = 100 } = options;
-
-  // Store callback in ref to avoid re-subscribing on every render
-  const callbackRef = useRef(onDevicesChanged);
-  callbackRef.current = onDevicesChanged;
-
-  // Debounce timer ref
-  const timerRef = useRef<number | null>(null);
-
-  // Event handler
   const handleDevicesChanged = useCallback(
     (event: Event) => {
-      const customEvent = event as DevicesChangedEvent;
+      const customEvent = event as CustomEvent<DevicesChangedEventDetail>;
       const devices = customEvent.detail?.devices;
-
-      if (!Array.isArray(devices)) {
-        console.warn('[useDeviceEvents] Invalid event data:', customEvent.detail);
-        return;
+      if (Array.isArray(devices)) {
+        onDevicesChanged(devices);
       }
-
-      // Debounce to prevent rapid updates
-      if (timerRef.current !== null) {
-        window.clearTimeout(timerRef.current);
-      }
-
-      timerRef.current = window.setTimeout(() => {
-        callbackRef.current(devices);
-        timerRef.current = null;
-      }, debounceMs);
     },
-    [debounceMs]
+    [onDevicesChanged]
   );
 
-  // Subscribe to events
-  useEffect(() => {
-    if (!enabled) {
-      return;
-    }
+  const handleFrame = useCallback(
+    (event: Event) => {
+      const customEvent = event as CustomEvent<FrameEventDetail>;
+      const { deviceId, frame } = customEvent.detail || {};
+      if (deviceId && frame && onFrame) {
+        onFrame(deviceId, frame);
+      }
+    },
+    [onFrame]
+  );
 
-    console.log('[useDeviceEvents] Subscribing to device events');
+  useEffect(() => {
+    if (!enabled) return;
+
     window.addEventListener('monitoring-devices-changed', handleDevicesChanged);
+    window.addEventListener('monitoring-frame', handleFrame);
+
+    console.log('[useDeviceEvents] Listeners attached');
 
     return () => {
-      console.log('[useDeviceEvents] Unsubscribing from device events');
       window.removeEventListener('monitoring-devices-changed', handleDevicesChanged);
-
-      // Clear any pending debounce timer
-      if (timerRef.current !== null) {
-        window.clearTimeout(timerRef.current);
-      }
+      window.removeEventListener('monitoring-frame', handleFrame);
     };
-  }, [enabled, handleDevicesChanged]);
+  }, [enabled, handleDevicesChanged, handleFrame]);
 }
 
 export default useDeviceEvents;

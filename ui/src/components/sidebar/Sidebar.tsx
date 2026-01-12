@@ -1,12 +1,21 @@
 import {
+  AppstoreOutlined,
+  CameraOutlined,
   CloudDownloadOutlined,
   DashboardOutlined,
+  InstagramOutlined,
+  MessageOutlined,
   MobileOutlined,
+  PictureOutlined,
   ReloadOutlined,
+  SettingOutlined,
+  ThunderboltOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons';
 import { Badge, Button, Menu, Modal, Typography } from 'antd';
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import './Sidebar.css';
 import { useThemeStore } from '../../stores/themeStore';
 import { useUpdateCheck } from '../../hooks/useUpdateCheck';
 import { updateService } from '../../services/updateService';
@@ -17,12 +26,13 @@ interface SidebarProps {
   collapsed: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const Sidebar: React.FC<SidebarProps> = ({ collapsed: _collapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { mode: themeMode } = useThemeStore();
-  const { hasUpdate, updateInfo, isChecking, checkForUpdates, currentVersion } = useUpdateCheck();
 
+  const { hasUpdate, updateInfo, isChecking, checkForUpdates, currentVersion } = useUpdateCheck();
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
 
@@ -45,7 +55,123 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: _collapsed }) => {
         },
         {
           key: '/devices/monitor',
-          label: 'Device monitoring',
+          label: 'Monitoring ⚡',
+        },
+      ],
+    },
+    {
+      key: '/tasks',
+      icon: <AppstoreOutlined />,
+      label: 'Tasks',
+      children: [
+        {
+          key: '/tasks/phone',
+          icon: <MobileOutlined />,
+          label: 'Phone',
+          children: [
+            {
+              key: '/tasks/phone/setup',
+              icon: <SettingOutlined />,
+              label: 'Setup',
+            },
+            {
+              key: '/tasks/phone/appclone',
+              icon: <AppstoreOutlined />,
+              label: 'App Clone',
+            },
+          ],
+        },
+        {
+          key: '/tasks/threads',
+          icon: <MessageOutlined />,
+          label: 'Threads',
+          children: [
+            {
+              key: '/tasks/threads/posts',
+              icon: <PictureOutlined />,
+              label: 'Posts',
+              children: [
+                {
+                  key: '/tasks/threads/posts/news',
+                  icon: <PictureOutlined />,
+                  label: 'News',
+                },
+                {
+                  key: '/tasks/threads/posts/reels',
+                  icon: <VideoCameraOutlined />,
+                  label: 'Reels',
+                },
+                {
+                  key: '/tasks/threads/posts/square',
+                  icon: <PictureOutlined />,
+                  label: 'Square',
+                },
+                {
+                  key: '/tasks/threads/posts/stories',
+                  icon: <CameraOutlined />,
+                  label: 'Stories',
+                },
+              ],
+            },
+            {
+              key: '/tasks/threads/interacts',
+              icon: <ThunderboltOutlined />,
+              label: 'Interacts',
+              children: [
+                {
+                  key: '/tasks/threads/interacts/dynamic',
+                  icon: <ThunderboltOutlined />,
+                  label: 'Dynamic',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          key: '/tasks/instagrams',
+          icon: <InstagramOutlined />,
+          label: 'Instagram',
+          children: [
+            {
+              key: '/tasks/instagrams/posts',
+              icon: <PictureOutlined />,
+              label: 'Posts',
+              children: [
+                {
+                  key: '/tasks/instagrams/posts/stories',
+                  icon: <CameraOutlined />,
+                  label: 'Stories',
+                },
+                {
+                  key: '/tasks/instagrams/posts/square',
+                  icon: <PictureOutlined />,
+                  label: 'Square',
+                },
+                {
+                  key: '/tasks/instagrams/posts/reels',
+                  icon: <VideoCameraOutlined />,
+                  label: 'Reels',
+                },
+                {
+                  key: '/tasks/instagrams/posts/news',
+                  icon: <PictureOutlined />,
+                  label: 'News',
+                },
+              ],
+            },
+            {
+              key: '/tasks/instagrams/interacts',
+              icon: <ThunderboltOutlined />,
+              label: 'Interacts',
+              children: [
+                {
+                  key: '/tasks/instagrams/interacts/dynamic',
+                  icon: <ThunderboltOutlined />,
+                  label: 'Dynamic',
+                },
+              ],
+            },
+          ],
         },
       ],
     },
@@ -90,27 +216,35 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: _collapsed }) => {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: 'calc(100% - 64px)', display: 'flex', flexDirection: 'column' }}>
       <Menu
         mode='inline'
         theme={isDark ? 'dark' : 'light'}
         selectedKeys={[location.pathname]}
-        defaultOpenKeys={['/devices']}
+        defaultOpenKeys={['/devices', '/tasks']}
         items={menuItems}
         onClick={handleMenuClick}
+        className='sidebar-menu-scroll'
         style={{
           flex: 1,
           borderRight: 0,
           paddingTop: '16px',
+          paddingBottom: '16px',
           background: isDark ? '#1f1f1f' : '#ffffff',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          maxHeight: 'calc(100vh - 200px)',
         }}
       />
 
-      {/* Update Section */}
+      {/* Update Section - Fixed at bottom */}
       <div
         style={{
           padding: '16px',
+          marginTop: 'auto',
           borderTop: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #f0f0f0',
+          flexShrink: 0,
+          backgroundColor: isDark ? '#1f1f1f' : '#ffffff',
         }}
       >
         {hasUpdate ? (

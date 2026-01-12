@@ -1,8 +1,3 @@
-"""
-Monitoring Bridge Module
-Exposes device monitoring APIs to React UI via pywebview
-"""
+from .monitoring import monitoring_bridge, MonitoringBridge
 
-from .monitoring import MonitoringBridge, monitoring_bridge
-
-__all__ = ["MonitoringBridge", "monitoring_bridge"]
+__all__ = ["monitoring_bridge", "MonitoringBridge"]

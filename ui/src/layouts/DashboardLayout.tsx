@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Layout, theme } from 'antd';
 import Header from '../components/header/Header';
-import Footer from '../components/footer/Footer';
+// import Footer from '../components/footer/Footer';
 import Sidebar from '../components/sidebar/Sidebar';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
@@ -51,7 +51,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               fontSize: collapsed ? '16px' : '20px',
             }}
           >
-            {collapsed ? '📱' : '📱 Phone Manager'}
+            {collapsed ? '📱' : '📱 Tool Socials'}
           </h1>
         </div>
         <Sidebar collapsed={collapsed} />
@@ -83,7 +83,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         >
           {children}
         </Content>
-        <Footer />
+        {/* <Footer /> */}
       </Layout>
     </Layout>
   );

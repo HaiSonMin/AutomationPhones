@@ -1,0 +1,77 @@
+/* PhoneCard - Compact Card Styles */
+
+.phone-card-compact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.phone-card-compact:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateX(4px);
+}
+
+.phone-card-compact.active {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: linear-gradient(135deg, #1e293b 0%, #0a2e1a 100%);
+}
+
+.phone-card-compact.offline {
+  opacity: 0.6;
+}
+
+.phone-card-compact-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.phone-card-compact-index {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.phone-card-compact-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.phone-card-compact-model {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.phone-card-compact-id {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Consolas', monospace;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phone-card-compact-status {
+  display: flex;
+  gap: 8px;
+}
+
+.phone-card-compact-actions {
+  display: flex;
+  gap: 8px;
+}

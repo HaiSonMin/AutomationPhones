@@ -1,17 +1,10 @@
-/**
- * MonitoringPage - Main page for device monitoring
- *
- * This is the entry point for the monitoring feature.
- * Wraps MonitoringContent in DashboardLayout like DashboardPage.
- */
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../../services/authService';
+import { MonitoringContent } from './MonitoringContent';
 import DashboardLayout from '../../../layouts/DashboardLayout';
-import MonitoringContent from './MonitoringContent';
+import { authService } from '../../../services/authService';
 
-export const MonitoringPage: React.FC = () => {
+export default function MonitoringPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +21,4 @@ export const MonitoringPage: React.FC = () => {
       <MonitoringContent />
     </DashboardLayout>
   );
-};
-
-export default MonitoringPage;
+}

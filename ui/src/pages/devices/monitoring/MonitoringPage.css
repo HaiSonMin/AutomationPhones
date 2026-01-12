@@ -1,126 +1,133 @@
-/**
- * MonitoringPage.css - Styles for the main monitoring page
- *
- * Dark theme consistent with the app design.
- */
+/* Monitoring Page Styles */
 
-/* =============================================================================
-   PAGE CONTAINER
-   ============================================================================= */
-
-.monitoring-page {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  color: #f1f5f9;
+.monitoring-container {
+  padding: 24px;
+  background: #0f172a;
+  height: 100%;
+  overflow: hidden;
 }
 
-/* =============================================================================
-   HEADER
-   ============================================================================= */
+.monitoring-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 60vh;
+}
 
 .monitoring-header {
-  padding: 24px 20px 16px;
-  border-bottom: 1px solid #334155;
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(10px);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-title {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 4px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
-.header-icon {
-  font-size: 28px;
+.header-left h3 {
+  color: #fff !important;
 }
 
-.header-title h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #f1f5f9;
-}
-
-.header-subtitle {
-  color: #94a3b8;
-  font-size: 14px;
-  padding-left: 42px;
-}
-
-/* =============================================================================
-   BANNERS
-   ============================================================================= */
-
-.error-banner,
-.warning-banner {
+.header-right {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  margin: 16px 20px;
+  gap: 8px;
+}
+
+.monitoring-stats {
+  margin-bottom: 16px;
+}
+
+.monitoring-stats .ant-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.monitoring-stats .ant-statistic-title {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.monitoring-stats .ant-statistic-content {
+  color: #fff;
+}
+
+.monitoring-info {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
   border-radius: 8px;
-  font-size: 14px;
-}
-
-.error-banner {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
-}
-
-.error-icon {
-  font-size: 18px;
-}
-
-.error-message {
-  flex: 1;
-}
-
-.error-retry {
-  padding: 6px 12px;
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  border-radius: 6px;
-  color: #fca5a5;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
-.error-retry:hover {
-  background: rgba(239, 68, 68, 0.3);
+.monitoring-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 80px 20px;
+  text-align: center;
 }
 
-.warning-banner {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: #93c5fd;
+.monitoring-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
-.warning-icon {
-  font-size: 18px;
+/* Dark theme overrides for antd */
+.monitoring-container .ant-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
-/* =============================================================================
-   RESPONSIVE
-   ============================================================================= */
+.monitoring-container .ant-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
 
-@media (max-width: 768px) {
-  .monitoring-header {
-    padding: 16px;
-  }
+.monitoring-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: calc(100vh - 392px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+}
 
-  .header-title h1 {
-    font-size: 20px;
-  }
+/* Custom scrollbar for monitoring list */
+.monitoring-list::-webkit-scrollbar {
+  width: 6px;
+}
 
-  .header-subtitle {
-    padding-left: 36px;
-    font-size: 13px;
-  }
+.monitoring-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.monitoring-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.monitoring-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.monitoring-container .ant-btn-primary {
+  background: #22c55e;
+  border-color: #22c55e;
+}
+
+.monitoring-container .ant-btn-primary.ant-btn-dangerous {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+.monitoring-container .ant-typography {
+  color: rgba(255, 255, 255, 0.85);
 }

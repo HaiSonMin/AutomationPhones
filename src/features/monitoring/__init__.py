@@ -1,10 +1,19 @@
 """
-Android Multi-Device Monitoring Feature
-Provides USB device detection, scrcpy streaming, and device control APIs
+Monitoring Package
+
+Features:
+- Device detection via ADB
+- Native scrcpy windows for device control (35-70ms latency)
 """
 
+from .device_watcher import DeviceWatcher, DetectedDevice, AdbDeviceStatus
+from .scrcpy_window_manager import ScrcpyWindowManager
 from .device_manager import DeviceManager
-from .device_watcher import DeviceWatcher
-from .scrcpy_process import ScrcpyProcess
 
-__all__ = ["DeviceManager", "DeviceWatcher", "ScrcpyProcess"]
+__all__ = [
+    "DeviceWatcher",
+    "DetectedDevice",
+    "AdbDeviceStatus",
+    "ScrcpyWindowManager",
+    "DeviceManager",
+]

@@ -1,364 +1,171 @@
 /**
- * useMonitoringBridge - Hook for communicating with Python monitoring bridge
- *
- * Provides type-safe access to monitoring API methods via pywebview.
- * Handles browser fallback when running outside pywebview.
- *
- * Usage:
- *   const bridge = useMonitoringBridge();
- *   const devices = await bridge.getDevices();
- *   await bridge.connect("abc123");
+ * useMonitoringBridge - Hook for frontend-backend communication
  */
 
-import { useMemo, useCallback } from 'react';
-import type {
-  Device,
-  ApiResult,
-  ConnectResult,
-  SetFpsResult,
-  SetSizeResult,
-  DisconnectAllResult,
-  MonitoringStats,
-} from '../types/monitoring.types';
+import { useMemo } from 'react';
+import type { Device, GlobalSettings, ApiResult, MonitoringStats } from '../types/monitoring.types';
 
-// =============================================================================
-// BRIDGE INTERFACE
-// =============================================================================
-
-/**
- * Interface for monitoring bridge methods
- *
- * This provides a cleaner API than using window.pywebview.api directly.
- * Method names are simplified (no 'monitoring_' prefix).
- */
-export interface MonitoringBridge {
-  // Device list
-  getDevices: () => Promise<Device[]>;
-  getDevice: (deviceId: string) => Promise<Device | null>;
-  refreshDevices: () => Promise<Device[]>;
-
-  // Device control
-  connect: (deviceId: string) => Promise<ConnectResult>;
-  disconnect: (deviceId: string) => Promise<ApiResult>;
-  disconnectAll: () => Promise<DisconnectAllResult>;
-
-  // Settings
-  setFps: (deviceId: string, fps: number) => Promise<SetFpsResult>;
-  setSize: (deviceId: string, maxSize: number) => Promise<SetSizeResult>;
-  setSettings: (deviceId: string, fps?: number, maxSize?: number) => Promise<ApiResult>;
-
-  // Stats
-  getStats: () => Promise<MonitoringStats>;
-
-  // Helper
-  isAvailable: boolean;
-}
-
-// =============================================================================
-// MOCK DATA - For browser testing
-// =============================================================================
-
-/**
- * Mock devices for testing in browser (without pywebview)
- */
+// Mock data for browser testing
 const MOCK_DEVICES: Device[] = [
   {
-    device_id: 'mock_device_1',
-    model: 'SM-M205G',
-    adb_status: 'online',
-    state: 'online',
-    fps: 30,
-    max_size: 800,
-    is_streaming: false,
+    device_id: 'mock-device-1',
+    model: 'Mock Phone',
+    adb_status: 'device',
+    state: 'previewing',
     is_online: true,
-    can_connect: true,
-    error: null,
-  },
-  {
-    device_id: 'mock_device_2',
-    model: 'Pixel 5',
-    adb_status: 'online',
-    state: 'streaming',
-    fps: 60,
-    max_size: 1080,
-    is_streaming: true,
-    is_online: true,
-    can_connect: false,
-    error: null,
-  },
-  {
-    device_id: 'mock_device_3',
-    model: 'OnePlus 8',
-    adb_status: 'unauthorized',
-    state: 'unauthorized',
-    fps: 30,
-    max_size: 800,
-    is_streaming: false,
-    is_online: false,
-    can_connect: false,
+    has_preview: true,
+    has_window: false,
+    fps: 14.5,
     error: null,
   },
 ];
 
-// =============================================================================
-// HOOK
-// =============================================================================
+const MOCK_SETTINGS: GlobalSettings = {
+  auto_preview: true,
+  preview_fps: 15,
+  preview_size: 480,
+  preview_quality: 70,
+  max_size: 800,
+  max_fps: 30,
+  bitrate: 4,
+};
 
-/**
- * Hook to access monitoring bridge API
- *
- * Returns a MonitoringBridge object with type-safe methods.
- * Falls back to mock data when running in browser without pywebview.
- *
- * @returns MonitoringBridge object
- *
- * @example
- * ```tsx
- * function MyComponent() {
- *   const bridge = useMonitoringBridge();
- *   const [devices, setDevices] = useState<Device[]>([]);
- *
- *   useEffect(() => {
- *     bridge.getDevices().then(setDevices);
- *   }, []);
- *
- *   const handleConnect = async (deviceId: string) => {
- *     const result = await bridge.connect(deviceId);
- *     if (result.success) {
- *       console.log("Connected!");
- *     }
- *   };
- * }
- * ```
- */
+export interface MonitoringBridge {
+  getDevices: (forceRefresh?: boolean) => Promise<Device[]>;
+  refreshDevices: () => Promise<Device[]>;
+  getDevice: (deviceId: string) => Promise<Device | null>;
+  getFrame: (deviceId: string) => Promise<string | null>;
+  startPreview: (deviceId: string) => Promise<ApiResult>;
+  stopPreview: (deviceId: string) => Promise<ApiResult>;
+  openWindow: (deviceId: string) => Promise<ApiResult>;
+  closeWindow: (deviceId: string) => Promise<ApiResult>;
+  stopAll: () => Promise<ApiResult>;
+  getSettings: () => Promise<GlobalSettings>;
+  updateSettings: (settings: Partial<GlobalSettings>) => Promise<GlobalSettings>;
+  getStats: () => Promise<MonitoringStats>;
+  isAvailable: () => Promise<boolean>;
+}
+
 export function useMonitoringBridge(): MonitoringBridge {
-  // Check if pywebview is available
-  const isAvailable = useMemo(() => {
-    return typeof window !== 'undefined' && !!window.pywebview?.api;
-  }, []);
+  return useMemo(() => {
+    const api = window.pywebview?.api;
+    const isInApp = !!api;
 
-  // Get API reference (may be undefined in browser)
-  const api = useMemo(() => {
-    return window.pywebview?.api;
-  }, []);
+    return {
+      getDevices: async (forceRefresh = false) => {
+        if (isInApp && api?.monitoring_get_devices) {
+          // Python API doesn't support parameters yet, so we'll use refreshDevices
+          if (forceRefresh) {
+            return await api.monitoring_refresh_devices();
+          }
+          return await api.monitoring_get_devices();
+        }
+        return MOCK_DEVICES;
+      },
 
-  // =========================================================================
-  // DEVICE LIST METHODS
-  // =========================================================================
+      refreshDevices: async () => {
+        if (isInApp && api?.monitoring_refresh_devices) {
+          return await api.monitoring_refresh_devices();
+        }
+        return MOCK_DEVICES;
+      },
 
-  const getDevices = useCallback(async (): Promise<Device[]> => {
-    if (!api) {
-      console.log('[MonitoringBridge] Using mock data (no pywebview)');
-      return MOCK_DEVICES;
-    }
-
-    try {
-      return await api.monitoring_get_devices();
-    } catch (error) {
-      console.error('[MonitoringBridge] getDevices error:', error);
-      return [];
-    }
-  }, [api]);
-
-  const getDevice = useCallback(
-    async (deviceId: string): Promise<Device | null> => {
-      if (!api) {
+      getDevice: async (deviceId: string) => {
+        if (isInApp && api?.monitoring_get_device) {
+          return await api.monitoring_get_device(deviceId);
+        }
         return MOCK_DEVICES.find((d) => d.device_id === deviceId) || null;
-      }
+      },
 
-      try {
-        return await api.monitoring_get_device(deviceId);
-      } catch (error) {
-        console.error('[MonitoringBridge] getDevice error:', error);
+      getFrame: async (deviceId: string) => {
+        if (isInApp && api?.monitoring_get_frame) {
+          return await api.monitoring_get_frame(deviceId);
+        }
         return null;
-      }
-    },
-    [api]
-  );
+      },
 
-  const refreshDevices = useCallback(async (): Promise<Device[]> => {
-    if (!api) {
-      return MOCK_DEVICES;
-    }
-
-    try {
-      return await api.monitoring_refresh_devices();
-    } catch (error) {
-      console.error('[MonitoringBridge] refreshDevices error:', error);
-      return [];
-    }
-  }, [api]);
-
-  // =========================================================================
-  // DEVICE CONTROL METHODS
-  // =========================================================================
-
-  const connect = useCallback(
-    async (deviceId: string): Promise<ConnectResult> => {
-      if (!api) {
-        // Mock: toggle streaming state
-        console.log('[MonitoringBridge] Mock connect:', deviceId);
-        return { success: true, pid: 12345 };
-      }
-
-      try {
-        return await api.monitoring_connect_device(deviceId);
-      } catch (error) {
-        console.error('[MonitoringBridge] connect error:', error);
-        return { success: false, error: String(error) };
-      }
-    },
-    [api]
-  );
-
-  const disconnect = useCallback(
-    async (deviceId: string): Promise<ApiResult> => {
-      if (!api) {
-        console.log('[MonitoringBridge] Mock disconnect:', deviceId);
+      startPreview: async (deviceId: string) => {
+        if (isInApp && api?.monitoring_start_preview) {
+          return await api.monitoring_start_preview(deviceId);
+        }
         return { success: true };
-      }
+      },
 
-      try {
-        return await api.monitoring_disconnect_device(deviceId);
-      } catch (error) {
-        console.error('[MonitoringBridge] disconnect error:', error);
-        return { success: false, error: String(error) };
-      }
-    },
-    [api]
-  );
-
-  const disconnectAll = useCallback(async (): Promise<DisconnectAllResult> => {
-    if (!api) {
-      console.log('[MonitoringBridge] Mock disconnectAll');
-      return { success: true, count: MOCK_DEVICES.length };
-    }
-
-    try {
-      return await api.monitoring_disconnect_all();
-    } catch (error) {
-      console.error('[MonitoringBridge] disconnectAll error:', error);
-      return { success: false, error: String(error) };
-    }
-  }, [api]);
-
-  // =========================================================================
-  // SETTINGS METHODS
-  // =========================================================================
-
-  const setFps = useCallback(
-    async (deviceId: string, fps: number): Promise<SetFpsResult> => {
-      if (!api) {
-        console.log('[MonitoringBridge] Mock setFps:', deviceId, fps);
-        return { success: true, fps };
-      }
-
-      try {
-        return await api.monitoring_set_fps(deviceId, fps);
-      } catch (error) {
-        console.error('[MonitoringBridge] setFps error:', error);
-        return { success: false, error: String(error) };
-      }
-    },
-    [api]
-  );
-
-  const setSize = useCallback(
-    async (deviceId: string, maxSize: number): Promise<SetSizeResult> => {
-      if (!api) {
-        console.log('[MonitoringBridge] Mock setSize:', deviceId, maxSize);
-        return { success: true, max_size: maxSize };
-      }
-
-      try {
-        return await api.monitoring_set_size(deviceId, maxSize);
-      } catch (error) {
-        console.error('[MonitoringBridge] setSize error:', error);
-        return { success: false, error: String(error) };
-      }
-    },
-    [api]
-  );
-
-  const setSettings = useCallback(
-    async (deviceId: string, fps?: number, maxSize?: number): Promise<ApiResult> => {
-      if (!api) {
-        console.log('[MonitoringBridge] Mock setSettings:', deviceId, fps, maxSize);
+      stopPreview: async (deviceId: string) => {
+        if (isInApp && api?.monitoring_stop_preview) {
+          return await api.monitoring_stop_preview(deviceId);
+        }
         return { success: true };
-      }
+      },
 
-      try {
-        return await api.monitoring_set_settings(deviceId, fps, maxSize);
-      } catch (error) {
-        console.error('[MonitoringBridge] setSettings error:', error);
-        return { success: false, error: String(error) };
-      }
-    },
-    [api]
-  );
+      openWindow: async (deviceId: string) => {
+        if (isInApp && api?.monitoring_open_window) {
+          return await api.monitoring_open_window(deviceId);
+        }
+        return { success: true };
+      },
 
-  // =========================================================================
-  // STATS METHODS
-  // =========================================================================
+      closeWindow: async (deviceId: string) => {
+        if (isInApp && api?.monitoring_close_window) {
+          return await api.monitoring_close_window(deviceId);
+        }
+        return { success: true };
+      },
 
-  const getStats = useCallback(async (): Promise<MonitoringStats> => {
-    if (!api) {
-      return {
-        device_count: MOCK_DEVICES.length,
-        streaming_count: MOCK_DEVICES.filter((d) => d.is_streaming).length,
-        is_running: true,
-      };
-    }
+      stopAll: async () => {
+        if (isInApp && api?.monitoring_stop_all) {
+          return await api.monitoring_stop_all();
+        }
+        return { success: true };
+      },
 
-    try {
-      return await api.monitoring_get_stats();
-    } catch (error) {
-      console.error('[MonitoringBridge] getStats error:', error);
-      return { device_count: 0, streaming_count: 0, is_running: false };
-    }
-  }, [api]);
+      getSettings: async () => {
+        if (isInApp && api?.monitoring_get_settings) {
+          return await api.monitoring_get_settings();
+        }
+        return MOCK_SETTINGS;
+      },
 
-  // =========================================================================
-  // RETURN BRIDGE OBJECT
-  // =========================================================================
+      updateSettings: async (settings: Partial<GlobalSettings>) => {
+        if (isInApp && api?.monitoring_update_settings) {
+          return await api.monitoring_update_settings(
+            settings.auto_preview,
+            settings.preview_fps,
+            settings.preview_size,
+            settings.preview_quality
+          );
+        }
+        return MOCK_SETTINGS;
+      },
 
-  return useMemo(
-    () => ({
-      // Device list
-      getDevices,
-      getDevice,
-      refreshDevices,
+      getStats: async (): Promise<MonitoringStats> => {
+        if (isInApp && api?.monitoring_get_stats) {
+          const stats = await api.monitoring_get_stats();
+          return {
+            device_count: stats.device_count ?? stats.total_devices ?? 0,
+            previewing_count: stats.previewing_count ?? stats.connected_devices ?? 0,
+            window_count: stats.window_count ?? 0,
+            is_running: stats.is_running ?? stats.monitoring_active ?? false,
+            is_available: stats.is_available ?? true,
+          };
+        }
+        return {
+          device_count: 1,
+          previewing_count: 1,
+          window_count: 0,
+          is_running: true,
+          is_available: true,
+        };
+      },
 
-      // Device control
-      connect,
-      disconnect,
-      disconnectAll,
-
-      // Settings
-      setFps,
-      setSize,
-      setSettings,
-
-      // Stats
-      getStats,
-
-      // Helper
-      isAvailable,
-    }),
-    [
-      getDevices,
-      getDevice,
-      refreshDevices,
-      connect,
-      disconnect,
-      disconnectAll,
-      setFps,
-      setSize,
-      setSettings,
-      getStats,
-      isAvailable,
-    ]
-  );
+      isAvailable: async () => {
+        if (isInApp && api?.monitoring_is_available) {
+          return await api.monitoring_is_available();
+        }
+        return true;
+      },
+    };
+  }, []);
 }
 
 export default useMonitoringBridge;

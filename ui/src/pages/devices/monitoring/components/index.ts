@@ -1,6 +1,2 @@
-/**
- * Component exports for monitoring feature
- */
-
-export { DeviceCard } from './DeviceCard';
-export { DeviceGrid } from './DeviceGrid';
+export { PhoneCard } from './PhoneCard';
+export { GlobalSettingsModal } from './GlobalSettingsModal';

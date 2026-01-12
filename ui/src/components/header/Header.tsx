@@ -4,7 +4,6 @@ import {
   UserOutlined,
   LogoutOutlined,
   SettingOutlined,
-  BellOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PoweroffOutlined,
@@ -13,6 +12,7 @@ import {
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { useThemeStore } from '../../stores/themeStore';
+import { Notifications, useNotifications } from '../notifications';
 
 const { Title } = Typography;
 
@@ -27,15 +27,11 @@ interface HeaderProps {
   notifications?: number;
 }
 
-const Header: React.FC<HeaderProps> = ({
-  collapsed = false,
-  onToggle,
-  user,
-  notifications = 0,
-}) => {
+const Header: React.FC<HeaderProps> = ({ collapsed = false, onToggle, user }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [appRunning, setAppRunning] = useState(false);
   const { mode: themeMode, toggleTheme } = useThemeStore();
+  const notificationHook = useNotifications();
 
   const isDark = themeMode === 'dark';
 
@@ -214,19 +210,16 @@ const Header: React.FC<HeaderProps> = ({
         </Tooltip>
 
         {/* Notifications */}
-        <Tooltip title='Notifications'>
-          <Badge count={notifications} size='small'>
-            <Button
-              type='text'
-              icon={
-                <BellOutlined style={{ fontSize: '18px', color: isDark ? '#ffffff' : undefined }} />
-              }
-              onClick={() => {
-                console.log('Show notifications');
-              }}
-            />
-          </Badge>
-        </Tooltip>
+        <Notifications
+          notifications={notificationHook.notifications}
+          onMarkAsRead={notificationHook.markAsRead}
+          onMarkAllAsRead={notificationHook.markAllAsRead}
+          onDelete={notificationHook.deleteNotification}
+          onClearAll={notificationHook.clearAll}
+          onLoadMore={notificationHook.loadMore}
+          hasMore={notificationHook.hasMore}
+          loading={notificationHook.loading}
+        />
 
         {/* User Dropdown */}
         <Dropdown menu={{ items: userMenuItems }} placement='bottomRight'>

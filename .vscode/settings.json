@@ -3,7 +3,7 @@
   "python.terminal.activateEnvironment": true,
   "python.analysis.extraPaths": ["${workspaceFolder}/src"],
   "python.autoComplete.extraPaths": ["${workspaceFolder}/src"],
-  "python.languageServer": "Pylance",
+  "python.languageServer": "None",
   "python.analysis.typeCheckingMode": "basic",
   "editor.defaultFormatter": "ms-python.black-formatter",
   "python.analysis.autoImportCompletions": true

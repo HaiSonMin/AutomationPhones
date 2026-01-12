@@ -126,8 +126,44 @@ declare global {
           connected_devices: number;
           monitoring_active: boolean;
           total_fps: number;
+          device_count?: number;
+          previewing_count?: number;
+          window_count?: number;
+          is_running?: boolean;
+          is_available?: boolean;
           [key: string]: any;
         }>;
+
+        // New Monitoring API (scrcpy window approach)
+        monitoring_get_frame: (device_id: string) => Promise<string | null>;
+        monitoring_start_preview: (device_id: string) => Promise<{
+          success: boolean;
+          error?: string;
+        }>;
+        monitoring_stop_preview: (device_id: string) => Promise<{
+          success: boolean;
+          error?: string;
+        }>;
+        monitoring_open_window: (device_id: string) => Promise<{
+          success: boolean;
+          error?: string;
+        }>;
+        monitoring_close_window: (device_id: string) => Promise<{
+          success: boolean;
+          error?: string;
+        }>;
+        monitoring_stop_all: () => Promise<{
+          success: boolean;
+          error?: string;
+        }>;
+        monitoring_get_settings: () => Promise<any>;
+        monitoring_update_settings: (
+          auto_preview?: boolean,
+          preview_fps?: number,
+          preview_size?: number,
+          preview_quality?: number
+        ) => Promise<any>;
+        monitoring_is_available: () => Promise<boolean>;
       };
     };
   }

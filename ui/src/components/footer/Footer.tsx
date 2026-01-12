@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Typography, Space } from 'antd';
-import { PhoneOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined, PhoneOutlined } from '@ant-design/icons';
+import { Space, Typography } from 'antd';
+import { useState } from 'react';
 import { useThemeStore } from '../../stores/themeStore';
 
 const { Text } = Typography;
@@ -37,41 +37,41 @@ const Footer: React.FC<FooterProps> = ({ version = '1.0.0' }) => {
     toolRunning: false,
   });
 
-  useEffect(() => {
-    // Load initial status
-    loadStatus();
+  // useEffect(() => {
+  // Load initial status
+  // loadStatus();
 
-    // Update status every 5 seconds
-    const interval = setInterval(loadStatus, 5000);
+  // Update status every 5 seconds
+  // const interval = setInterval(loadStatus, 5000);
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
-  const loadStatus = async () => {
-    try {
-      // Check if PyWebView API is available
-      if (!window.pywebview?.api) {
-        console.error('PyWebView API not available');
-        return;
-      }
+  // const loadStatus = async () => {
+  //   try {
+  //     // Check if PyWebView API is available
+  //     if (!window.pywebview?.api) {
+  //       console.error('PyWebView API not available');
+  //       return;
+  //     }
 
-      // Get health status from Python
-      const health = await window.pywebview.api.health_check_health_server();
+  //     // Get health status from Python
+  //     const health = await window.pywebview.api.health_check_health_server();
 
-      setStatus({
-        serverConnected: health.server,
-        devicesRunning: health.devices || 0,
-        devicesStopped: 0, // TODO: Get stopped devices count
-        toolRunning: false, // TODO: Get tool running status
-      });
-    } catch (error) {
-      console.error('Failed to load status:', error);
-      setStatus({
-        ...status,
-        serverConnected: false,
-      });
-    }
-  };
+  //     setStatus({
+  //       serverConnected: health.server,
+  //       devicesRunning: health.devices || 0,
+  //       devicesStopped: 0, // TODO: Get stopped devices count
+  //       toolRunning: false, // TODO: Get tool running status
+  //     });
+  //   } catch (error) {
+  //     console.error('Failed to load status:', error);
+  //     setStatus({
+  //       ...status,
+  //       serverConnected: false,
+  //     });
+  //   }
+  // };
 
   return (
     <div

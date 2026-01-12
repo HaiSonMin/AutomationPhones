@@ -1,240 +1,199 @@
 /**
- * MonitoringContent - Content component for device monitoring
+ * MonitoringContent - Main content for monitoring
  *
- * This contains the actual monitoring UI (grid, devices, etc).
- * Separated from MonitoringPage so it can be wrapped in DashboardLayout.
- *
- * Features:
- * - Auto-fetch devices on mount
- * - Real-time updates via Python events
- * - Polling fallback every 5 seconds
- * - Disconnect all button
- * - Responsive grid layout
+ * Scrcpy window only approach (~35-70ms latency)
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Typography, Spin, Alert, Button, Space, Card, Row, Col, Statistic, Badge } from 'antd';
+import { Typography, Spin, Alert, Button, Row, Col, Statistic, Card, Tooltip, message } from 'antd';
 import {
-  ReloadOutlined,
-  DisconnectOutlined,
+  SettingOutlined,
   MobileOutlined,
-  PlayCircleOutlined,
+  ReloadOutlined,
+  DesktopOutlined,
 } from '@ant-design/icons';
+import { PhoneCard } from './components/PhoneCard';
+import { GlobalSettingsModal } from './components/GlobalSettingsModal';
 import { useMonitoringBridge } from './hooks/useMonitoringBridge';
 import { useDeviceEvents } from './hooks/useDeviceEvents';
-import { DeviceGrid } from './components/DeviceGrid';
-import type { Device } from './types/monitoring.types';
+import type { Device, GlobalSettings } from './types/monitoring.types';
+import './MonitoringPage.css';
 
 const { Title, Text } = Typography;
 
-// =============================================================================
-// CONSTANTS
-// =============================================================================
+const DEFAULT_SETTINGS: GlobalSettings = {
+  max_size: 800,
+  max_fps: 60,
+  bitrate: 8,
+};
 
-/** How often to poll for devices (in milliseconds) */
-const POLL_INTERVAL_MS = 5000;
-
-// =============================================================================
-// COMPONENT
-// =============================================================================
-
-const MonitoringContent: React.FC = () => {
+export const MonitoringContent: React.FC = () => {
   const bridge = useMonitoringBridge();
 
-  // State
   const [devices, setDevices] = useState<Device[]>([]);
+  const [settings, setSettings] = useState<GlobalSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // =========================================================================
-  // FETCH DEVICES
-  // =========================================================================
+  const loadData = useCallback(
+    async (forceRefresh = false) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  /**
-   * Fetch device list from Python bridge
-   */
-  const fetchDevices = useCallback(async () => {
-    try {
-      const data = await bridge.getDevices();
-      setDevices(data);
-      setError(null);
-    } catch (err) {
-      console.error('[MonitoringContent] Failed to fetch devices:', err);
-      setError('Không thể tải danh sách thiết bị');
-    } finally {
-      setLoading(false);
-    }
-  }, [bridge]);
+        const [devicesData, settingsData] = await Promise.all([
+          forceRefresh ? bridge.refreshDevices() : bridge.getDevices(),
+          bridge.getSettings(),
+        ]);
 
-  /**
-   * Refresh devices (with loading state)
-   */
-  const handleRefresh = useCallback(async () => {
-    setLoading(true);
-    await fetchDevices();
-  }, [fetchDevices]);
+        setDevices(devicesData);
+        setSettings(settingsData);
+      } catch (err) {
+        setError(String(err));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [bridge]
+  );
 
-  // =========================================================================
-  // DISCONNECT ALL
-  // =========================================================================
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
-  /**
-   * Disconnect all streaming devices
-   */
-  const handleDisconnectAll = useCallback(async () => {
-    try {
-      await bridge.disconnectAll();
-      await fetchDevices();
-    } catch (err) {
-      console.error('[MonitoringContent] Failed to disconnect all:', err);
-    }
-  }, [bridge, fetchDevices]);
-
-  // =========================================================================
-  // EVENT HANDLING
-  // =========================================================================
-
-  /**
-   * Handle device changes from Python events
-   */
-  const handleDevicesChanged = useCallback((updatedDevices: Device[]) => {
-    console.log('[MonitoringContent] Devices changed:', updatedDevices.length);
-    setDevices(updatedDevices);
+  const handleDevicesChanged = useCallback((newDevices: Device[]) => {
+    setDevices(newDevices);
   }, []);
 
-  // Subscribe to events from Python
-  useDeviceEvents(handleDevicesChanged);
+  useDeviceEvents(handleDevicesChanged, undefined, true);
 
-  // =========================================================================
-  // EFFECTS
-  // =========================================================================
+  const handleOpenWindow = async (deviceId: string) => {
+    const result = await bridge.openWindow(deviceId);
+    if (result.success) {
+      message.success('Đang mở scrcpy window...');
+    } else {
+      message.error(result.error || 'Failed to open window');
+    }
+  };
 
-  // Initial fetch on mount
-  useEffect(() => {
-    fetchDevices();
-  }, [fetchDevices]);
+  const handleCloseWindow = async (deviceId: string) => {
+    await bridge.closeWindow(deviceId);
+  };
 
-  // Polling fallback (in case events don't work)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Only poll if not currently loading
-      if (!loading) {
-        fetchDevices();
-      }
-    }, POLL_INTERVAL_MS);
+  const handleStopAll = async () => {
+    await bridge.stopAll();
+    message.info('Đã đóng tất cả windows');
+  };
 
-    return () => clearInterval(interval);
-  }, [fetchDevices, loading]);
-
-  // =========================================================================
-  // COMPUTED VALUES
-  // =========================================================================
+  const handleSaveSettings = async (newSettings: Partial<GlobalSettings>) => {
+    const updated = await bridge.updateSettings(newSettings);
+    setSettings(updated);
+    message.success('Đã lưu cài đặt');
+  };
 
   const onlineCount = devices.filter((d) => d.is_online).length;
-  const streamingCount = devices.filter((d) => d.is_streaming).length;
+  const windowCount = devices.filter((d) => d.has_window).length;
 
-  // =========================================================================
-  // RENDER
-  // =========================================================================
+  if (loading) {
+    return (
+      <div className='monitoring-loading'>
+        <Spin size='large' />
+        <Text type='secondary'>Đang tải...</Text>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert
+        type='error'
+        message='Lỗi'
+        description={error}
+        action={<Button onClick={() => loadData(true)}>Thử lại</Button>}
+      />
+    );
+  }
 
   return (
-    <div>
-      {/* Page Header */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={4} style={{ margin: 0, marginBottom: 8 }}>
-          📱 Device Monitoring
-        </Title>
-        <Text type='secondary'>Quản lý và theo dõi thiết bị Android kết nối qua USB</Text>
+    <div className='monitoring-container'>
+      {/* Header */}
+      <div className='monitoring-header'>
+        <div className='header-left'>
+          <Title level={3} style={{ margin: 0 }}>
+            ⚡ Monitoring
+          </Title>
+          <Text type='secondary'>Scrcpy window (~35-70ms latency)</Text>
+        </div>
+        <div className='header-right'>
+          <Tooltip title='Đóng tất cả'>
+            <Button onClick={handleStopAll}>Stop All</Button>
+          </Tooltip>
+          <Tooltip title='Làm mới'>
+            <Button icon={<ReloadOutlined />} onClick={() => loadData(true)} />
+          </Tooltip>
+          <Tooltip title='Cài đặt'>
+            <Button icon={<SettingOutlined />} onClick={() => setSettingsOpen(true)} />
+          </Tooltip>
+        </div>
       </div>
 
-      {/* Stats Row */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
+      {/* Stats */}
+      <Row gutter={16} className='monitoring-stats'>
+        <Col span={8}>
           <Card size='small'>
-            <Statistic title='Tổng thiết bị' value={devices.length} prefix={<MobileOutlined />} />
+            <Statistic title='Thiết bị' value={devices.length} prefix={<MobileOutlined />} />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card size='small'>
-            <Statistic title='Online' value={onlineCount} valueStyle={{ color: '#52c41a' }} />
+            <Statistic title='Online' value={onlineCount} valueStyle={{ color: '#22c55e' }} />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card size='small'>
-            <Badge dot={streamingCount > 0} offset={[10, 0]}>
-              <Statistic
-                title='Đang stream'
-                value={streamingCount}
-                prefix={<PlayCircleOutlined />}
-                valueStyle={{ color: '#1890ff' }}
-              />
-            </Badge>
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card size='small'>
-            <Space>
-              <Button
-                icon={<ReloadOutlined spin={loading} />}
-                onClick={handleRefresh}
-                loading={loading}
-              >
-                Refresh
-              </Button>
-              {streamingCount > 0 && (
-                <Button icon={<DisconnectOutlined />} onClick={handleDisconnectAll} danger>
-                  Ngắt tất cả
-                </Button>
-              )}
-            </Space>
+            <Statistic
+              title='Windows'
+              value={windowCount}
+              valueStyle={{ color: '#f59e0b' }}
+              prefix={<DesktopOutlined />}
+            />
           </Card>
         </Col>
       </Row>
 
-      {/* Error Banner */}
-      {error && (
-        <Alert
-          message='Lỗi'
-          description={error}
-          type='error'
-          showIcon
-          closable
-          style={{ marginBottom: 24 }}
-          action={
-            <Button size='small' onClick={handleRefresh}>
-              Thử lại
-            </Button>
-          }
-        />
-      )}
-
-      {/* Bridge Status */}
-      {!bridge.isAvailable && (
-        <Alert
-          message='Chế độ Demo'
-          description='Đang chạy ở chế độ demo (không có pywebview)'
-          type='info'
-          showIcon
-          style={{ marginBottom: 24 }}
-        />
-      )}
-
-      {/* Device Grid */}
-      {loading && devices.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60 }}>
-          <Spin size='large' />
-          <div style={{ marginTop: 16 }}>
-            <Text type='secondary'>Đang tải danh sách thiết bị...</Text>
-          </div>
+      {/* Device List */}
+      {devices.length === 0 ? (
+        <div className='monitoring-empty'>
+          <MobileOutlined style={{ fontSize: 64, opacity: 0.3 }} />
+          <Text type='secondary'>Không có thiết bị nào được kết nối</Text>
+          <Text type='secondary' style={{ fontSize: 12 }}>
+            Cắm điện thoại Android qua USB và bật USB Debugging
+          </Text>
         </div>
       ) : (
-        <DeviceGrid
-          devices={devices}
-          loading={loading}
-          onRefresh={handleRefresh}
-          onDisconnectAll={handleDisconnectAll}
-        />
+        <div className='monitoring-list'>
+          {devices.map((device, index) => (
+            <>
+              <PhoneCard
+                key={device.device_id}
+                device={device}
+                index={index + 1}
+                onOpenWindow={handleOpenWindow}
+                onCloseWindow={handleCloseWindow}
+              />
+            </>
+          ))}
+        </div>
       )}
+
+      {/* Settings Modal */}
+      <GlobalSettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        settings={settings}
+        onSave={handleSaveSettings}
+      />
     </div>
   );
 };
