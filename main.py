@@ -22,19 +22,15 @@ from constants.constant_value import CONST_VAL_UI_URL
 
 
 def main():
-    # Global reference for cleanup
     global tray_manager
 
     def signal_handler(sig, frame):
-        """Handle Ctrl+C signal"""
         if "tray_manager" in globals():
             tray_manager.stop()
         os._exit(0)
 
-    # Register signal handler
     signal.signal(signal.SIGINT, signal_handler)
 
-    # Create bridge registry - auto-discovers all bridges
     bridgeRegistry = create_bridge()
 
     print("🚀 Starting Automation Tool...")
@@ -48,12 +44,12 @@ def main():
         window.hide()
         return False  # Prevent window from closing
 
-    # Create window with Python bridge
+    # Create window with Python bridge (Fixed size for login page)
     window = webview.create_window(
         title="Automation Tool - Phone Manager",
         url=CONST_VAL_UI_URL,
-        width=1400,
-        height=900,
+        width=700,
+        height=800,
         resizable=True,
         frameless=False,
         easy_drag=True,
@@ -75,13 +71,23 @@ def main():
     try:
         webview.start(debug=True)
     except KeyboardInterrupt:
-        print("\n🛑 Application interrupted by user")
+        print("\n🛑 Application interrupted by user (Ctrl+C)")
+        # Clean up
+        if "tray_manager" in globals():
+            tray_manager.stop()
+        if "window" in locals():
+            try:
+                window.destroy()
+            except:
+                pass
+        os._exit(0)
     except Exception as e:
         print(f"\n❌ Error: {e}")
     finally:
         # Clean up system tray
         if "tray_manager" in globals():
             tray_manager.stop()
+        print("\n👋 Application closed")
 
 
 if __name__ == "__main__":

@@ -1,10 +1,10 @@
 """
-Auth Bridge - Handles authentication events from React UI
+Auth Bridge - Handles authentication from React UI
 Token stored securely in Python keyring
 """
 
-import keyring
 import json
+import keyring
 from typing import Dict, Any, TypedDict
 
 # Keyring service configuration
@@ -31,7 +31,12 @@ class AuthBridge:
     """
 
     def __init__(self):
+        self._window = None
         print("🔐 AuthBridge initialized")
+
+    def set_window(self, window):
+        """Set window reference for maximizing after login"""
+        self._window = window
 
     # ============================================
     # Login Handler - Called by React after successful login
@@ -41,7 +46,7 @@ class AuthBridge:
         print("user::::", user)
         """
         Called by React after successful login API response
-        Saves token and user data to keyring
+        Saves token and user data to keyring, then registers PC with server
 
         Args:
             token: JWT token from server
@@ -59,6 +64,53 @@ class AuthBridge:
 
             user_name = user.get("userName", "Unknown")
             print(f"✅ Login successful - Token saved for: {user_name}")
+
+            # Register PC with server
+            try:
+                from utils.util_system import (
+                    get_computer_name,
+                    get_machine_guid,
+                    get_pc_ip,
+                    get_os_info,
+                )
+                from apis import api_pc, CreatePCPhoneDto
+
+                # Get PC information
+                pc_name = get_computer_name()
+                machine_guid = get_machine_guid()
+                pc_ip = get_pc_ip()
+                os_info = get_os_info()
+
+                # Create payload
+                payload: CreatePCPhoneDto = {
+                    "name": pc_name,
+                    "alias": pc_name,  # Default alias to name
+                    "machineGUID": machine_guid,
+                    "ip": pc_ip,
+                    "os": os_info,
+                }
+
+                # Register PC
+                print("🖥️ Registering PC with server...")
+                pc_result = api_pc.create(payload)
+
+                # Check if successful (statusCode 200 or 201)
+                if pc_result.get("statusCode") in [200, 201]:
+                    print("✅ PC registered successfully")
+                else:
+                    print(
+                        f"⚠️ PC registration failed: {pc_result.get('reasonStatusCode')}"
+                    )
+                    # Don't block login on PC registration failure
+
+            except Exception as pc_error:
+                print(f"⚠️ PC registration error (non-blocking): {pc_error}")
+                # Don't block login on PC registration failure
+
+            # Maximize window after successful login
+            if self._window:
+                self._window.maximize()
+                print("📐 Window maximized")
 
             return {"success": True, "message": f"Token saved for {user_name}"}
         except Exception as e:
@@ -92,7 +144,7 @@ class AuthBridge:
 
             print("✅ Logout successful - Token cleared")
 
-            return {"success": True, "message": "Token cleared"}
+            return {"success": True, "message": "Logged out successfully"}
         except Exception as e:
             print(f"❌ Error clearing token: {e}")
             return {"success": False, "error": str(e)}

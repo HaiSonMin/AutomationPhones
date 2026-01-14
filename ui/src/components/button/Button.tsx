@@ -27,8 +27,10 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <AntButton
       {...props}
+      size='large'
+      style={{ height: '36px', ...props.style }}
       className={cn(
-        'h-12 py-5 font-semibold rounded-lg transition-all duration-200',
+        'font-semibold rounded-lg transition-all duration-200',
         variantClasses[variant],
         fullWidth && 'w-full',
         className

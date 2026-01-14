@@ -1,13 +1,12 @@
-import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { LoadingOutlined, LoginOutlined } from '@ant-design/icons';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { z } from 'zod';
+import { Button, Input, PasswordInput } from '../../components';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../stores/authStore';
-import { useThemeStore } from '../../stores/themeStore';
-import { Button, Input, PasswordInput } from '../../components';
-import { LoadingOutlined, LoginOutlined } from '@ant-design/icons';
 
 // Validation schema
 const loginSchema = z.object({
@@ -22,9 +21,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const setAuthLoading = useAuthStore((state) => state.setLoading);
-  const { mode: themeMode } = useThemeStore();
-  const isDark = themeMode === 'dark';
-
   const {
     control,
     handleSubmit,
@@ -62,19 +58,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      className={`min-h-screen flex items-center justify-center p-4 ${
-        isDark
-          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
-          : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'
-      }`}
-    >
-      <div className='w-full max-w-md'>
+    <div className='relative min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'>
+      {/* Decorative gradient blobs */}
+      <div className='absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl' />
+      <div className='absolute bottom-20 right-10 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl' />
+      <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-300/10 rounded-full blur-3xl' />
+
+      <div className='relative z-10 w-full max-w-md'>
         {/* Logo & Title */}
         <div className='text-center mb-8'>
-          <div className='inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl mb-4 shadow-lg'>
+          <div className='inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl mb-6 shadow-2xl shadow-blue-500/30'>
             <svg
-              className='w-8 h-8 text-white'
+              className='w-10 h-10 text-white'
               fill='none'
               stroke='currentColor'
               viewBox='0 0 24 24'
@@ -87,33 +82,21 @@ export default function LoginPage() {
               />
             </svg>
           </div>
-          <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <h1 className='text-4xl font-bold mb-3 bg-gradient-to-r from-gray-900 via-blue-800 to-purple-900 bg-clip-text text-transparent'>
             Phone Manager
           </h1>
-          <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-            Automation Tool - Desktop Application
-          </p>
+          <p className='text-gray-600 font-medium'>Automation Tool - Desktop Application</p>
         </div>
 
         {/* Login Card */}
-        <div
-          className={`rounded-2xl shadow-xl p-8 border ${
-            isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
-          }`}
-        >
-          <h2 className={`text-2xl font-semibold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Sign In
-          </h2>
+        <div className='rounded-3xl shadow-2xl p-8 border bg-white/80 backdrop-blur-xl border-gray-200'>
+          <h2 className='text-2xl font-bold mb-6 text-gray-900'>Sign In</h2>
 
           {/* Error Message */}
           {error && (
-            <div
-              className={`mb-6 p-4 border rounded-lg flex items-start gap-3 ${
-                isDark ? 'bg-red-900/30 border-red-800' : 'bg-red-50 border-red-200'
-              }`}
-            >
+            <div className='mb-6 p-4 border rounded-xl flex items-start gap-3 bg-red-50 border-red-200'>
               <svg
-                className='w-5 h-5 text-red-500 mt-0.5 flex-shrink-0'
+                className='w-5 h-5 text-red-600 mt-0.5 shrink-0'
                 fill='currentColor'
                 viewBox='0 0 20 20'
               >
@@ -124,9 +107,7 @@ export default function LoginPage() {
                 />
               </svg>
               <div className='flex-1'>
-                <p className={`text-sm font-medium ${isDark ? 'text-red-400' : 'text-red-800'}`}>
-                  {error}
-                </p>
+                <p className='text-sm font-semibold text-red-800'>{error}</p>
               </div>
             </div>
           )}
@@ -172,24 +153,11 @@ export default function LoginPage() {
               disabled={isLoading}
               fullWidth
               icon={isLoading ? <LoadingOutlined /> : <LoginOutlined />}
+              className='mt-2'
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-
-          {/* Footer */}
-          <div className={`mt-6 pt-6 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-            <p className={`text-center text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              API Server: <span className='font-mono text-blue-500'>localhost:9000</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Additional Info */}
-        <div className='mt-6 text-center'>
-          <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-            Secure authentication powered by Python Keyring
-          </p>
         </div>
       </div>
     </div>
